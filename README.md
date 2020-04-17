@@ -15,3 +15,15 @@ Windowsの場合は
 python script.py
 ```
 で実行されます。
+
+## データ元について
+https://opendata.pref.kagawa.lg.jp/dataset/359.html に掲載されている各種ファイルを取得しています。
+## 生成されるファイルについて
+```
+contacts.json（一般相談件数のファイル）
+contacts.csv （県サイトからスクレイピングしたファイル）
+inspections_summary.json （検査実施のファイル）
+inspections_summary.csv（県サイトよりスクレイピングしたファイル）
+querents.json（受診相談件数に関するファイル）
+querents.csv（県サイトより取得したファイル）
+```
