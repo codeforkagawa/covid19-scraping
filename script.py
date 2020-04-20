@@ -1,10 +1,12 @@
 import csv
 import json
 import codecs
+import re
 from lxml import html
 from datetime import datetime, timedelta
 import urllib.request
 import requests
+import feedparser
 
 
 def generateInspectionSummary(updated_at):
@@ -87,6 +89,25 @@ def generateContacts(updated_at):
         json.dump(template, f, indent=4, ensure_ascii=False)
 
 
+def generateNews():
+    template = {
+        "newsItems": []
+    }
+    url = "https://www.pref.kagawa.lg.jp/content/etc/top/ssi/rss_new.xml"
+    for entry in feedparser.parse(url).entries:
+        if re.search(r'コロナ|休止|中止|休館|自粛', entry.title) is not None:
+            if len(template["newsItems"]) >= 4:
+                break
+            template["newsItems"].append({
+                    "date": datetime.strptime(entry.updated, "%Y-%m-%d").strftime("%m/%d/%Y"),
+                    "url": entry.link,
+                    "text": entry.title
+            })
+    filename = 'news.json'
+    with open(filename, 'w', encoding="utf-8") as f:
+        json.dump(template, f, indent=4, ensure_ascii=False)
+
+
 def getUpdatedAt():
     res = requests.get('https://opendata.pref.kagawa.lg.jp/dataset/359.html')
     dom = html.fromstring(res.content).xpath("//dl[@class='author']/dd[3]")
@@ -101,3 +122,4 @@ if __name__ == "__main__":
         generateInspectionSummary(updated_at)
         generateQuerents(updated_at)
         generateContacts(updated_at)
+    generateNews()
