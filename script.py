@@ -1,174 +1,125 @@
 import csv
 import json
 import codecs
-import datetime
-from datetime import date
-from dateutil.tz import gettz
+import re
+from lxml import html
+from datetime import datetime, timedelta
 import urllib.request
-url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
-savename = "inspections_summary.csv"
-urllib.request.urlretrieve(url, savename)
-dt_now = datetime.datetime.now(gettz('Asia/Tokyo'))
-da = "{}\/{}\/{} {}:{}".format(dt_now.year, dt_now.month,
-                               dt_now.day, dt_now.hour, dt_now.minute)
-with open("inspections_summary.csv", encoding="shift_jis") as f:
-    reader = csv.DictReader(f, delimiter=",", quotechar='"')
-    with open('inspections_summary.json', 'w', encoding="utf-8") as f:
-        reader_list = list(reader)
-        f.write("{")
-        f.write("\n")
-        f.write(" \"date\": \"{}\",".format(da))
-        f.write("\n")
-        f.write(" \"data\": {")
-        f.write("\n")
-        f.write(" \"県内\": [")
-        f.write("\n")
-        a = 0
-        while a < len(reader_list):
-            t = reader_list[a]
-            dys = int(t["ＰＣＲ検査件数"])
-            if a == len(reader_list) - 1:
-                f.write("{}".format(dys))
-            else:
-                f.write("{},".format(dys))
-            f.write("\n")
-            a += 1
-        f.write("]")
-        f.write("\n")
-        f.write("},")
-        f.write("\n")
-        f.write("\"labels\":[")
-        f.write("\n")
-        a = 0
-        while a < len(reader_list):
-            t = reader_list[a]
-            dys = list(t["検査日"].split("/"))
-            if a == len(reader_list) - 1:
-                f.write("\"{}\/{}\"".format(dys[1], dys[2]))
-            else:
-                f.write("\"{}\/{}\",".format(dys[1], dys[2]))
-            f.write("\n")
-            a += 1
-        f.write("]")
-        f.write("\n")
-        f.write("}")
-url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4391/%E5%8F%97%E8%A8%BA%E7%9B%B8%E8%AB%87%E4%BB%B6%E6%95%B0.csv"
-savename = "querents.csv"
-urllib.request.urlretrieve(url, savename)
-dt_now = datetime.datetime.now(gettz('Asia/Tokyo'))
-da = "{}\/{}\/{} {}:{}".format(dt_now.year, dt_now.month,
-                               dt_now.day, dt_now.hour, dt_now.minute)
-with open("querents.csv", encoding="shift_jis") as f:
-    reader = csv.DictReader(f, delimiter=",", quotechar='"')
-    with open('querents.json', 'w', encoding="utf-8") as f:
-        f.write("{")
-        f.write("\n")
-        f.write(" \"date\": \"{}\",".format(da))
-        f.write("\n")
-        f.write(" \"data\": [")
-        f.write("\n")
-        reader_list = list(reader)
-        i = 0
-        while i < len(reader_list):
-            f.write("{")
-            f.write("\n")
-            t = reader_list[i]
-            n = 0
-            d = list(t["相談日"].split("/"))
-            if len(d[1]) == 1:
-                d[1] = "0" + d[1]
-            if len(d[2]) == 1:
-                d[2] = "0" + d[2]
-            f.write(
-                "\"日付\": \"{}-{}-{}T03:00:00.000Z\",".format(d[0], d[1], d[2]))
-            f.write("\n")
-            f.write("\"小計\":{},".format(t["「帰国者・接触者相談センター」受診相談件数"]))
-            f.write("\n")
-            f.write("\"short_date\":\"" + d[1] + "\/" + d[2] + "\",")
-            f.write("\n")
-            dys = ["日", "月", "火", "水", "木", "金", "土"]
-            dy = date(int(d[0]), int(d[1]), int(d[2])).weekday()
-            if dy == 6:
-                dy = 0
-            else:
-                dy += 1
-            f.write("\"w\":{},".format(i + 1))
-            f.write("\n")
-            f.write("\"曜日\":{},".format(43871 + i))
-            f.write("\n")
-            f.write("\"date\":\"{}-{}-{}\"".format(d[0], d[1], d[2]))
-            f.write("\n")
-            if i == len(reader_list) - 1:
-                f.write("}")
-            else:
-                f.write("},")
-            f.write("\n")
-            i += 1
-        f.write("   ]")
-        f.write("\n")
-        f.write("}")
-url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4392/%E4%B8%80%E8%88%AC%E7%9B%B8%E8%AB%87%E4%BB%B6%E6%95%B0.csv"
-savename = "contacts.csv"
-urllib.request.urlretrieve(url, savename)
-dt_now = datetime.datetime.now(gettz('Asia/Tokyo'))
-da = "{}\/{}\/{} {}:{}".format(dt_now.year, dt_now.month,
-                               dt_now.day, dt_now.hour, dt_now.minute)
-with open("contacts.csv", encoding="shift_jis") as f:
-    reader = csv.DictReader(f, delimiter=",", quotechar='"')
-    with open('contacts.json', 'w', encoding="utf-8") as f:
-        f.write("{")
-        f.write("\n")
-        f.write(" \"date\": \"{}\",".format(da))
-        f.write("\n")
-        f.write(" \"data\": [")
-        f.write("\n")
-        reader_list = list(reader)
-        i = 0
-        while i < len(reader_list):
-            f.write("{")
-            f.write("\n")
-            t = reader_list[i]
-            n = 0
-            types = [
-                "県民",
-                "医療機関",
-                "行政機関",
-                "企業",
-                "観光・旅館",
-                "その他"
-            ]
-            for tp in types:
-                n += int(t["「帰国者・接触者相談センター」一般相談件数（" + tp + "）"])
-            d = list(t["相談日"].split("/"))
-            if len(d[1]) == 1:
-                d[1] = "0" + d[1]
-            if len(d[2]) == 1:
-                d[2] = "0" + d[2]
-            f.write(
-                "\"日付\": \"{}-{}-{}T03:00:00.000Z\",".format(d[0], d[1], d[2]))
-            f.write("\n")
-            f.write("\"小計\":{},".format(n))
-            f.write("\n")
-            f.write("\"short_date\":\"" + d[1] + "\/" + d[2] + "\",")
-            f.write("\n")
-            dys = ["日", "月", "火", "水", "木", "金", "土"]
-            dy = date(int(d[0]), int(d[1]), int(d[2])).weekday()
-            if dy == 6:
-                dy = 0
-            else:
-                dy += 1
-            f.write("\"w\":{},".format(dy))
-            f.write("\n")
-            f.write("\"曜日\":\"{}\",".format(dys[dy]))
-            f.write("\n")
-            f.write("\"date\":\"{}-{}-{}\"".format(d[0], d[1], d[2]))
-            f.write("\n")
-            if i == len(reader_list) - 1:
-                f.write("}")
-            else:
-                f.write("},")
-            f.write("\n")
-            i += 1
-        f.write("   ]")
-        f.write("\n")
-        f.write("}")
+import requests
+import feedparser
+
+
+def generateInspectionSummary(updated_at):
+    template = {
+        "date": updated_at,
+        "data": {}
+    }
+    url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
+    res = urllib.request.urlopen(url)
+    reader = csv.DictReader(codecs.iterdecode(
+        res, 'shift_jis'), delimiter=",", quotechar='"')
+    template["data"] = {
+        "県内": [],
+        "label": []
+    }
+    for row in reader:
+        template["data"]["県内"].append(int(row["ＰＣＲ検査件数"]))
+        template["data"]["label"].append(datetime.strptime(
+            row["検査日"], "%Y/%m/%d").strftime("%m/%d"))
+    filename = 'data/inspections_summary.json'
+    with open(filename, 'w', encoding="utf-8") as f:
+        json.dump(template, f, indent=4, ensure_ascii=False)
+
+
+def generateQuerents(updated_at):
+    template = {
+        "date": updated_at,
+        "data": []
+    }
+    url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4391/%E5%8F%97%E8%A8%BA%E7%9B%B8%E8%AB%87%E4%BB%B6%E6%95%B0.csv"
+    res = urllib.request.urlopen(url)
+    reader = csv.DictReader(codecs.iterdecode(
+        res, 'shift_jis'), delimiter=",", quotechar='"')
+    prev_date = None
+    for row in reader:
+        date = datetime.strptime(row["相談日"], "%Y/%m/%d")
+        if prev_date is not None and (date - prev_date).days > 1:
+            for i in range(1, (date - prev_date).days):
+                prev_date += timedelta(days=1)
+                template["data"].append({
+                    "日付": prev_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "小計": 0
+                })
+        template["data"].append({
+            "日付": date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "小計": int(row["「帰国者・接触者相談センター」受診相談件数"])
+        })
+        prev_date = date
+    filename = 'data/querents.json'
+    with open(filename, 'w', encoding="utf-8") as f:
+        json.dump(template, f, indent=4, ensure_ascii=False)
+
+
+def generateContacts(updated_at):
+    template = {
+        "date": updated_at,
+        "data": []
+    }
+    url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4392/%E4%B8%80%E8%88%AC%E7%9B%B8%E8%AB%87%E4%BB%B6%E6%95%B0.csv"
+    res = urllib.request.urlopen(url)
+    reader = csv.DictReader(codecs.iterdecode(
+        res, 'shift_jis'), delimiter=",", quotechar='"')
+    prev_date = None
+    for row in reader:
+        date = datetime.strptime(row["相談日"], "%Y/%m/%d")
+        if prev_date is not None and (date - prev_date).days > 1:
+            for i in range(1, (date - prev_date).days):
+                prev_date += timedelta(days=1)
+                template["data"].append({
+                    "日付": prev_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "小計": 0
+                })
+        template["data"].append({
+            "日付": date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "小計": sum(int(row["「帰国者・接触者相談センター」一般相談件数（{}）".format(tp)]) for tp in ["県民", "医療機関", "行政機関", "企業", "観光・旅館", "その他"])
+        })
+        prev_date = date
+    filename = 'data/contacts.json'
+    with open(filename, 'w', encoding="utf-8") as f:
+        json.dump(template, f, indent=4, ensure_ascii=False)
+
+
+def generateNews():
+    template = {
+        "newsItems": []
+    }
+    url = "https://www.pref.kagawa.lg.jp/content/etc/top/ssi/rss_new.xml"
+    for entry in feedparser.parse(url).entries:
+        if re.search(r'コロナ|休止|中止|休館|自粛', entry.title) is not None:
+            if len(template["newsItems"]) >= 4:
+                break
+            template["newsItems"].append({
+                    "date": datetime.strptime(entry.updated, "%Y-%m-%d").strftime("%m/%d/%Y"),
+                    "url": entry.link,
+                    "text": entry.title
+            })
+    filename = 'data/news.json'
+    with open(filename, 'w', encoding="utf-8") as f:
+        json.dump(template, f, indent=4, ensure_ascii=False)
+
+
+def getUpdatedAt():
+    res = requests.get('https://opendata.pref.kagawa.lg.jp/dataset/359.html')
+    dom = html.fromstring(res.content).xpath("//dl[@class='author']/dd[3]")
+    if len(dom) != 1:
+        return ""
+    return datetime.strptime(dom[0].text, "%Y年%m月%d日 %H時%M分").strftime("%Y/%m/%d %H:%M")
+
+
+if __name__ == "__main__":
+    updated_at = getUpdatedAt()
+    if updated_at != "":
+        generateInspectionSummary(updated_at)
+        generateQuerents(updated_at)
+        generateContacts(updated_at)
+    generateNews()
