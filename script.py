@@ -12,7 +12,8 @@ import feedparser
 def generateInspectionSummary(updated_at):
     template = {
         "date": updated_at,
-        "data": {}
+        "data": {},
+        "labels": []
     }
     url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
     res = urllib.request.urlopen(url)
@@ -20,12 +21,11 @@ def generateInspectionSummary(updated_at):
         res, 'shift_jis'), delimiter=",", quotechar='"')
     template["data"] = {
         "県内": [],
-        "label": []
     }
     for row in reader:
         template["data"]["県内"].append(int(row["ＰＣＲ検査件数"]))
-        template["data"]["label"].append(datetime.strptime(
-            row["検査日"], "%Y/%m/%d").strftime("%m/%d"))
+        template["labels"].append(datetime.strptime(
+            row["検査日"], "%Y/%m/%d").strftime("%-m/%-d"))
     filename = 'data/inspections_summary.json'
     with open(filename, 'w', encoding="utf-8") as f:
         json.dump(template, f, indent=4, ensure_ascii=False)
@@ -95,7 +95,7 @@ def generateNews():
     }
     url = "https://www.pref.kagawa.lg.jp/content/etc/top/ssi/rss_new.xml"
     for entry in feedparser.parse(url).entries:
-        if re.search(r'コロナ|休止|中止|休館|自粛', entry.title) is not None:
+        if re.search(r'コロナ|休止|中止|休館|自粛|休業', entry.title) is not None:
             if len(template["newsItems"]) >= 4:
                 break
             template["newsItems"].append({
