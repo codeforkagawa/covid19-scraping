@@ -26,7 +26,7 @@ def generateInspectionSummary(updated_at):
         template["data"]["県内"].append(int(row["ＰＣＲ検査件数"]))
         template["data"]["label"].append(datetime.strptime(
             row["検査日"], "%Y/%m/%d").strftime("%m/%d"))
-    filename = 'inspections_summary.json'
+    filename = 'data/inspections_summary.json'
     with open(filename, 'w', encoding="utf-8") as f:
         json.dump(template, f, indent=4, ensure_ascii=False)
 
@@ -55,7 +55,7 @@ def generateQuerents(updated_at):
             "小計": int(row["「帰国者・接触者相談センター」受診相談件数"])
         })
         prev_date = date
-    filename = 'querents.json'
+    filename = 'data/querents.json'
     with open(filename, 'w', encoding="utf-8") as f:
         json.dump(template, f, indent=4, ensure_ascii=False)
 
@@ -84,7 +84,7 @@ def generateContacts(updated_at):
             "小計": sum(int(row["「帰国者・接触者相談センター」一般相談件数（{}）".format(tp)]) for tp in ["県民", "医療機関", "行政機関", "企業", "観光・旅館", "その他"])
         })
         prev_date = date
-    filename = 'contacts.json'
+    filename = 'data/contacts.json'
     with open(filename, 'w', encoding="utf-8") as f:
         json.dump(template, f, indent=4, ensure_ascii=False)
 
@@ -103,7 +103,7 @@ def generateNews():
                     "url": entry.link,
                     "text": entry.title
             })
-    filename = 'news.json'
+    filename = 'data/news.json'
     with open(filename, 'w', encoding="utf-8") as f:
         json.dump(template, f, indent=4, ensure_ascii=False)
 
