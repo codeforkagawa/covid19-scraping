@@ -1,0 +1,60 @@
+name: Update JSON Files
+
+on:
+  repository_dispatch:
+    types: [update-data]
+  schedule:
+    - cron: "*/60 * * * *"
+
+jobs:
+  data:
+    name: update-data
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout scraper
+        uses: actions/checkout@v2
+        with:
+          path: scraper
+      - name: Checkout covid19
+        uses: actions/checkout@v2
+        with:
+          repository: codeforkagawa/covid19
+          ref: deploy/resources
+          path: covid19
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: webfactory/ssh-agent@v0.2.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.8.2"
+      - name: Cache pip
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('scraper/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libxml2-dev libxslt-dev
+          python -m pip install --upgrade pip
+          pip install -r scraper/requirements.txt
+      - name: Generate JSON data file
+        run: |
+          cd /home/runner/work/covid19-scraping/covid19-scraping/scraper
+          python script.py
+          cp -f data/* /home/runner/work/covid19-scraping/covid19-scraping/covid19/data/
+      - name: Commit files
+        run: |
+          cd /home/runner/work/covid19-scraping/covid19-scraping/covid19
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add data/*
+            git commit -m "update data"
+            git push
+          fi
