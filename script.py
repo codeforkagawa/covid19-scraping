@@ -9,26 +9,37 @@ import requests
 import feedparser
 
 
-def generateInspectionSummary(updated_at):
-    template = {
+def generateSummary(updated_at):
+    inspectionTemplate = {
         "date": updated_at,
         "data": {},
         "labels": []
+    }
+    patientsTemplate = {
+        "date": updated_at,
+        "data": []
     }
     url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
     res = urllib.request.urlopen(url)
     reader = csv.DictReader(codecs.iterdecode(
         res, 'shift_jis'), delimiter=",", quotechar='"')
-    template["data"] = {
+    inspectionTemplate["data"] = {
         "県内": [],
     }
     for row in reader:
-        template["data"]["県内"].append(int(row["ＰＣＲ検査件数"]))
-        template["labels"].append(datetime.strptime(
+        inspectionTemplate["data"]["県内"].append(int(row["ＰＣＲ検査件数"]))
+        inspectionTemplate["labels"].append(datetime.strptime(
             row["検査日"], "%Y/%m/%d").strftime("%-m/%-d"))
+        patientsTemplate["data"].append({
+            "日付": datetime.strptime(row["検査日"], "%Y/%m/%d").strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "小計": int(row["結果（陽性）"])
+        })
     filename = 'data/inspections_summary.json'
     with open(filename, 'w', encoding="utf-8") as f:
-        json.dump(template, f, indent=4, ensure_ascii=False)
+        json.dump(inspectionTemplate, f, indent=4, ensure_ascii=False)
+    filename = 'data/patients_summary.json'
+    with open(filename, 'w', encoding="utf-8") as f:
+        json.dump(patientsTemplate, f, indent=4, ensure_ascii=False)
 
 
 def generateQuerents(updated_at):
@@ -119,7 +130,7 @@ def getUpdatedAt():
 if __name__ == "__main__":
     updated_at = getUpdatedAt()
     if updated_at != "":
-        generateInspectionSummary(updated_at)
+        generateSummary(updated_at)
         generateQuerents(updated_at)
         generateContacts(updated_at)
     generateNews()
