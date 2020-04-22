@@ -106,7 +106,7 @@ def generateNews():
     }
     url = "https://www.pref.kagawa.lg.jp/content/etc/top/ssi/rss_new.xml"
     for entry in feedparser.parse(url).entries:
-        if re.search(r'コロナ|休止|中止|休館|自粛|休業', entry.title) is not None:
+        if re.search(r'^(?!.*(新型コロナウイルス感染症（COVID－19）に関する情報|香川県新型コロナウイルス対策本部等)).*(?=(コロナ|休止|休館|休業|休校|自粛|中止)).*$', entry.title) is not None:
             if len(template["newsItems"]) >= 4:
                 break
             template["newsItems"].append({
