@@ -27,7 +27,7 @@ def generateSummary(updated_at):
         "県内": [],
     }
     for row in reader:
-        inspectionTemplate["data"]["県内"].append(int(row["ＰＣＲ検査件数"]))
+        inspectionTemplate["data"]["県内"].append(int(row["ＰＣＲ検査件数(環境保健研究センター)"]))
         inspectionTemplate["labels"].append(datetime.strptime(
             row["検査日"], "%Y/%m/%d").strftime("%-m/%-d"))
         patientsTemplate["data"].append({
