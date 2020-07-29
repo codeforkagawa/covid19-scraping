@@ -7,6 +7,41 @@ from datetime import datetime, timedelta
 import urllib.request
 import requests
 import feedparser
+from io import StringIO, BytesIO
+from pdfminer.converter import TextConverter
+from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
+from pdfminer.pdfpage import PDFPage
+
+
+def extract_text_from_pdf_url(url, user_agent=None):
+    resource_manager = PDFResourceManager()
+    fake_file_handle = StringIO()
+    converter = TextConverter(resource_manager, fake_file_handle)    
+
+    if user_agent == None:
+        user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
+
+    headers = {'User-Agent': user_agent}
+    request = urllib.request.Request(url, data=None, headers=headers)
+
+    response = urllib.request.urlopen(request).read()
+    fb = BytesIO(response)
+
+    page_interpreter = PDFPageInterpreter(resource_manager, converter)
+
+    for page in PDFPage.get_pages(fb,
+                                caching=True,
+                                check_extractable=True):
+        page_interpreter.process_page(page)
+
+    text = fake_file_handle.getvalue()
+
+    # close open handles
+    fb.close()
+    converter.close()   
+    fake_file_handle.close()
+
+    return text
 
 
 def generateSummary(updated_at):
@@ -26,6 +61,7 @@ def generateSummary(updated_at):
     inspectionTemplate["data"] = {
         "県内": [],
     }
+    total_inspections = 0
     for i, row in enumerate(reader):
         if i == 0:
             continue
@@ -37,6 +73,45 @@ def generateSummary(updated_at):
             "日付": datetime.strptime(row["検査日"], "%Y/%m/%d").strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "小計": int(row["PCR結果(陽性)"].strip() or 0) + int(row["結果(陽性)"].strip() or 0)
         })
+        total_inspections += int(row["PCR検査件数(環境保健研究センター)"].strip() or 0)+int(row["PCR検査件数(その他)"].strip() or 0)+int(row["抗原検出用キット実施件数(医療機関)"].strip() or 0)
+    # 検査陽性者の状況
+    url = "https://www.pref.kagawa.lg.jp/content/etc/subsite/kansenshoujouhou/upfiles/se9si9200517102553_f01.pdf"
+    text = extract_text_from_pdf_url(url)
+    res = re.findall(r'(\d+)人', text)
+    if len(res) == 9:
+        mainSummaryTemplate = {
+            "date": updated_at,
+            "attr": "検査実施件数",
+            "value": total_inspections,
+            "children": [
+                {
+                    "attr": "陽性患者数",
+                    "value": int(res[0]),
+                    "children": [
+                        {
+                            "attr": "入院中",
+                            "value": int(res[1])
+                        },
+                        {
+                            "attr": "退院",
+                            "value": int(res[8])
+                        },
+                        {
+                            "attr": "死亡",
+                            "value": int(res[7])
+                        },
+                        {
+                            "attr": "調査中",
+                            "value": int(res[6])
+                        }
+                    ]
+                }
+            ]
+        }
+        filename = 'data/main_summary.json'
+        with open(filename, 'w', encoding="utf-8") as f:
+            json.dump(mainSummaryTemplate, f, indent=4, ensure_ascii=False)
+
     filename = 'data/inspections_summary.json'
     with open(filename, 'w', encoding="utf-8") as f:
         json.dump(inspectionTemplate, f, indent=4, ensure_ascii=False)
