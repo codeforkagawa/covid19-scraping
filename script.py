@@ -22,7 +22,7 @@ def generateSummary(updated_at):
     url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
     res = urllib.request.urlopen(url)
     reader = csv.DictReader(codecs.iterdecode(
-        res, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","ＰＣＲ検査件数(環境保健研究センター)","ＰＣＲ検査件数(その他）)","結果（陽性）","結果（陰性）","抗原検出用キット実施件数（医療機関）","結果（陽性）ダミー","結果（陰性）ダミー"])
+        res, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","PCR検査件数(環境保健研究センター)","PCR検査件数(その他)","PCR結果(陽性)","PCR結果(陰性)","抗原検出用キット実施件数(医療機関)","結果(陽性)","結果(陰性)"])
     inspectionTemplate["data"] = {
         "県内": [],
     }
@@ -30,12 +30,12 @@ def generateSummary(updated_at):
         if i == 0:
             continue
         print(row)
-        inspectionTemplate["data"]["県内"].append(int(row["ＰＣＲ検査件数(環境保健研究センター)"]))
+        inspectionTemplate["data"]["県内"].append(int(row["PCR検査件数(環境保健研究センター)"].strip() or 0)+int(row["PCR検査件数(その他)"].strip() or 0)+int(row["抗原検出用キット実施件数(医療機関)"].strip() or 0))
         inspectionTemplate["labels"].append(datetime.strptime(
             row["検査日"], "%Y/%m/%d").strftime("%-m/%-d"))
         patientsTemplate["data"].append({
             "日付": datetime.strptime(row["検査日"], "%Y/%m/%d").strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "小計": int(row["結果（陽性）"])
+            "小計": int(row["PCR結果(陽性)"].strip() or 0) + int(row["結果(陽性)"].strip() or 0)
         })
     filename = 'data/inspections_summary.json'
     with open(filename, 'w', encoding="utf-8") as f:
