@@ -54,7 +54,7 @@ def generateSummary(updated_at):
         "date": updated_at,
         "data": []
     }
-    # リンクが変わっているの修正（仮）
+    # url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
     url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0%20(1).csv"
     res = urllib.request.urlopen(url)
     reader = csv.DictReader(codecs.iterdecode(
