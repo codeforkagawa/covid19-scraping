@@ -1,6 +1,11 @@
 name: Update JSON Files
 
-on: push
+on:
+  repository_dispatch:
+    types: [update-data]
+  schedule:
+    - cron: "*/60 * * * *"
+    
 jobs:
   data:
     name: update-data
