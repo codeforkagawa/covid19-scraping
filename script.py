@@ -54,8 +54,8 @@ def generateSummary(updated_at):
         "date": updated_at,
         "data": []
     }
-    # url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
-    url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0%20(1).csv"
+    url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0.csv"
+    # url = "https://opendata.pref.kagawa.lg.jp/dataset/359/resource/4390/%EF%BC%B0%EF%BC%A3%EF%BC%B2%E6%A4%9C%E6%9F%BB%E4%BB%B6%E6%95%B0%20(1).csv"
     res = urllib.request.urlopen(url)
     reader = csv.DictReader(codecs.iterdecode(
         res, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","PCR検査件数(環境保健研究センター)","PCR検査件数(その他)","PCR結果(陽性)","PCR結果(陰性)","抗原検出用キット実施件数(保健所)","抗原検出用キット実施件数(医療機関)","結果(陽性)","結果(陰性)"])
