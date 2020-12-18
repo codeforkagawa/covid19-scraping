@@ -3,3 +3,4 @@ requests==2.23.0
 lxml==4.2.1
 feedparser==5.2.1
 pdfminer==20191125
+beautifulsoup4==4.9.1
