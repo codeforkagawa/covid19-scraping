@@ -91,23 +91,44 @@ def generateInspectionsArray():
     ]
     inspections_number = []
     labels = []
+    patients_summary = []
     for i, url in enumerate(csv_files):
         with urllib.request.urlopen(url) as response:
             if i == 0:
                 f = response.read().decode("shift-jis")
                 for csv_arr in readCSV(f):
                     if len(csv_arr) == 9:
-                        a_day_inspections_number = int(csv_arr[1]) + int(csv_arr[2]) + int(csv_arr[5]) + int(csv_arr[6])
+                        date = datetime.datetime(int(csv_arr[0].split(
+                            "/")[0]), int(csv_arr[0].split("/")[1]), int(csv_arr[0].split("/")[2]))
+                        a_day_inspections_number = int(
+                            csv_arr[1]) + int(csv_arr[2]) + int(csv_arr[5]) + int(csv_arr[6])
                         labels.append(csv_arr[0])
                         inspections_number.append(a_day_inspections_number)
+                        rs = {"日付": str(date), "小計": int(
+                            csv_arr[3]) + int(csv_arr[7])}
+                        patients_summary.append(rs)
             elif i == 1:
                 f = response.read().decode("shift-jis")
                 for csv_arr in readCSV(f):
                     if csv_arr != [""]:
-                        a_day_inspections_number = int(csv_arr[1]) + int(csv_arr[3])
+                        date = datetime.datetime(int(csv_arr[0].split(
+                            "/")[0]), int(csv_arr[0].split("/")[1]), int(csv_arr[0].split("/")[2]))
+                        a_day_inspections_number = int(
+                            csv_arr[1]) + int(csv_arr[3])
                         labels.append(csv_arr[0])
                         inspections_number.append(a_day_inspections_number)
-    return {"inspections_count": inspections_number, "labels": labels}
+                        rs = {"日付": str(date), "小計": int(csv_arr[8])}
+                        patients_summary.append(rs)
+    return {"inspections_count": inspections_number, "labels": labels, "patients_summary": patients_summary}
+
+def generatePatientsSummary(patients_summary_arr, last_update):
+    patients_summary_template = {
+        "date": last_update,
+        "data": patients_summary_arr
+    }
+    with open("data/patients_summary.json", "w", encoding="utf-8") as f:
+        json.dump(patients_summary_template, f, indent=4, ensure_ascii=False)
+
 def get_patient_details(last_update):
     URL = "https://www.pref.kagawa.lg.jp/yakumukansen/kansensyoujouhou/kansen/se9si9200517102553.html"
     with urllib.request.urlopen(URL) as response:
@@ -152,7 +173,7 @@ def get_patient_details(last_update):
                         patient_data["性別"] = txt + "性"
                     elif re_generation.match(txt):
                         patient_data["年代"] = txt
-                template["data"].insert(0,patient_data)
+                template["data"].insert(0, patient_data)
         with open("data/patients.json", "w", encoding="utf-8") as f:
             json.dump(template, f, indent=4, ensure_ascii=False)
 def generateSummary(inspections_count,last_update):
@@ -220,7 +241,7 @@ def getUpdatedAt():
 
 if __name__ == "__main__":
     # 県のサイトからのスクレイピングの最終更新日はこちらを使用
-    LAST_UPDATE = (datetime.datetime.now() + datetime.timedelta(hours=9)).strftime('%Y/%m/%d %H:%M')
+    LAST_UPDATE = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime('%Y/%m/%d %H:%M')
     # オープンデータから取得したファイルの最終更新日はこちらを使用
     updated_at = getUpdatedAt()
     if updated_at != "":
@@ -230,4 +251,5 @@ if __name__ == "__main__":
     get_patient_details(LAST_UPDATE)
     generateSummary(summary_inspections["inspections_count"],LAST_UPDATE)
     generateInspectionsJson(summary_inspections,LAST_UPDATE)
+    generatePatientsSummary(summary_inspections["patients_summary"],LAST_UPDATE)
     # generateNews()
