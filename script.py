@@ -221,8 +221,8 @@ def generateSummary(inspections_count,last_update):
                         "value": results["死亡"]
                     },
                     {
-                        "attr": "調査中",
-                        "value": 0
+                        "attr": "うち直近1週間",
+                        "value": results["うち直近1週間"]
                     }
                 ]
             }
@@ -230,6 +230,9 @@ def generateSummary(inspections_count,last_update):
     }
     with open("data/main_summary.json", "w", encoding="utf-8") as f:
             json.dump(main_summary_template, f, indent=4, ensure_ascii=False)
+
+def generateNews():
+    pass
 
 def getUpdatedAt():
     res = requests.get('https://opendata.pref.kagawa.lg.jp/dataset/359.html')
