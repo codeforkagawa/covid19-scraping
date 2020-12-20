@@ -232,7 +232,27 @@ def generateSummary(inspections_count,last_update):
             json.dump(main_summary_template, f, indent=4, ensure_ascii=False)
 
 def generateNews():
-    pass
+    URL = "https://www.pref.kagawa.lg.jp/kocho/koho/kohosonota/topics/wt5q49200131182439.html"
+    re_url = re.compile(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+")
+    news_template = {
+        "newsItems":[],
+    }
+    with urllib.request.urlopen(URL) as response:
+        html = response.read().decode("utf-8")
+        sp = BeautifulSoup(html,"html.parser")
+        for a_tag in sp.select(".box_info .box_info_cnt ul li a"):
+            news_item = {
+                "url": "",
+                "text": "",
+            }
+            if re_url.match(a_tag.get("href")):
+                news_item["url"] = a_tag.get("href")
+            else:
+                news_item["url"] = f"https://www.pref.kagawa.lg.jp/{str(a_tag.get('href'))}"
+            news_item["text"] = a_tag.get_text(strip=True)
+            news_template["newsItems"].append(news_item)
+    with open("data/news.json","w",encoding="utf-8") as f:
+            json.dump(news_template, f, indent=4, ensure_ascii=False)
 
 def getUpdatedAt():
     res = requests.get('https://opendata.pref.kagawa.lg.jp/dataset/359.html')
@@ -255,4 +275,4 @@ if __name__ == "__main__":
     generateSummary(summary_inspections["inspections_count"],LAST_UPDATE)
     generateInspectionsJson(summary_inspections,LAST_UPDATE)
     generatePatientsSummary(summary_inspections["patients_summary"],LAST_UPDATE)
-    # generateNews()
+    generateNews()
