@@ -93,31 +93,32 @@ def generateInspectionsArray():
     labels = []
     patients_summary = []
     for i, url in enumerate(csv_files):
-        with urllib.request.urlopen(url) as response:
             if i == 0:
-                f = response.read().decode("shift-jis")
-                for csv_arr in readCSV(f):
-                    if len(csv_arr) == 9:
-                        date = datetime.datetime(int(csv_arr[0].split(
-                            "/")[0]), int(csv_arr[0].split("/")[1]), int(csv_arr[0].split("/")[2]))
-                        a_day_inspections_number = int(
-                            csv_arr[1]) + int(csv_arr[2]) + int(csv_arr[5]) + int(csv_arr[6])
-                        labels.append(csv_arr[0])
+                with urllib.request.urlopen(url) as response:
+                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","PCR検査実施件数（環境保健研究センター）","PCR検査実施件数（医療機関）","PCR検査実施結果（陽性）","PCR検査実施結果（陰性）","抗原検査実施件数（保健所）","抗原検査実施件数（医療機関）","抗原検査実施結果（陽性）","抗原検査実施結果（陰性）"])
+                    for i, row in enumerate(reader):
+                        if i == 0:
+                            continue
+                        date = datetime.datetime.strptime(row["検査日"], '%Y/%m/%d')
+                        a_day_inspections_number = convertInt(
+                            row["PCR検査実施件数（環境保健研究センター）"]) + convertInt(row["PCR検査実施件数（医療機関）"]) + convertInt(row["抗原検査実施件数（保健所）"]) + convertInt(row["抗原検査実施件数（医療機関）"])
+                        labels.append(row["検査日"])
                         inspections_number.append(a_day_inspections_number)
-                        rs = {"日付": str(date), "小計": int(
-                            csv_arr[3]) + int(csv_arr[7])}
+                        rs = {"日付": str(date), "小計": convertInt(
+                            row["PCR検査実施結果（陽性）"]) + convertInt(row["抗原検査実施結果（陽性）"])}
                         patients_summary.append(rs)
-            elif i == 1:
-                f = response.read().decode("shift-jis")
-                for csv_arr in readCSV(f):
-                    if csv_arr != [""]:
-                        date = datetime.datetime(int(csv_arr[0].split(
-                            "/")[0]), int(csv_arr[0].split("/")[1]), int(csv_arr[0].split("/")[2]))
-                        a_day_inspections_number = int(
-                            csv_arr[1]) + int(csv_arr[3])
-                        labels.append(csv_arr[0])
+            else:
+                with urllib.request.urlopen(url) as response:
+                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","保健所の行政検査（PCR検査）（環境保健研究センター）","保健所の行政検査（PCR検査）（民間検査機関）","保健所の行政検査（抗原検査）（保健所）","医療機関からの報告（検査実施人数）","医療機関からの報告（うちPCR検査）","医療機関からの報告（うち抗原検査）","医療機関からの報告（うち行政検査）","医療機関からの報告（うち行政検査以外の検査）","陽性確定の届出"])
+                    for i, row in enumerate(reader):
+                        if i == 0:
+                            continue
+                        date = datetime.datetime.strptime(row["検査日"], '%Y/%m/%d')
+                        a_day_inspections_number = convertInt(
+                            row["保健所の行政検査（PCR検査）（環境保健研究センター）"]) + convertInt(row["医療機関からの報告（検査実施人数）"])
+                        labels.append(row["検査日"])
                         inspections_number.append(a_day_inspections_number)
-                        rs = {"日付": str(date), "小計": int(csv_arr[8])}
+                        rs = {"日付": str(date), "小計": convertInt(row["陽性確定の届出"])}
                         patients_summary.append(rs)
     return {"inspections_count": inspections_number, "labels": labels, "patients_summary": patients_summary}
 
@@ -238,6 +239,10 @@ def getUpdatedAt():
         return ""
     return datetime.datetime.strptime(dom[0].text, "%Y年%m月%d日 %H時%M分").strftime("%Y/%m/%d %H:%M")
 
+def convertInt(digit):
+    if digit == "ー":
+        return 0
+    return int(digit)
 
 if __name__ == "__main__":
     # 県のサイトからのスクレイピングの最終更新日はこちらを使用
