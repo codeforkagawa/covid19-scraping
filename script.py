@@ -98,6 +98,10 @@ def generateInspectionsArray():
                     reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","PCR検査実施件数（環境保健研究センター）","PCR検査実施件数（医療機関）","PCR検査実施結果（陽性）","PCR検査実施結果（陰性）","抗原検査実施件数（保健所）","抗原検査実施件数（医療機関）","抗原検査実施結果（陽性）","抗原検査実施結果（陰性）"])
                     for i, row in enumerate(reader):
                         if i == 0:
+                            if row["PCR検査実施結果（陽性）"] != "PCR検査実施結果（陽性）":
+                                raise Exception("column name is mismatch")
+                            if row["抗原検査実施結果（陽性）"] != "抗原検査実施結果（陽性）":
+                                raise Exception("column name is mismatch")
                             continue
                         date = datetime.datetime.strptime(row["検査日"], '%Y/%m/%d')
                         a_day_inspections_number = convertInt(
@@ -109,9 +113,11 @@ def generateInspectionsArray():
                         patients_summary.append(rs)
             else:
                 with urllib.request.urlopen(url) as response:
-                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","保健所の行政検査（PCR検査）（環境保健研究センター）","保健所の行政検査（PCR検査）（民間検査機関）","保健所の行政検査（抗原検査）（保健所）","医療機関からの報告（検査実施人数）","医療機関からの報告（うちPCR検査）","医療機関からの報告（うち抗原検査）","医療機関からの報告（うち行政検査）","医療機関からの報告（うち行政検査以外の検査）","陽性確定の届出"])
+                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","保健所の行政検査（PCR検査）（環境保健研究センター）", "保健所の行政検査（PCR検査）（保健所）", "保健所の行政検査（PCR検査）（民間検査機関）","保健所の行政検査（抗原検査）（保健所）","医療機関からの報告（検査実施人数）","医療機関からの報告（うちPCR検査）","医療機関からの報告（うち抗原検査）","医療機関からの報告（うち行政検査）","医療機関からの報告（うち行政検査以外の検査）","陽性確定の届出"])
                     for i, row in enumerate(reader):
                         if i == 0:
+                            if row["陽性確定の届出"] != "陽性確定の届出":
+                                raise Exception("column name is mismatch")
                             continue
                         date = datetime.datetime.strptime(row["検査日"], '%Y/%m/%d')
                         a_day_inspections_number = convertInt(
