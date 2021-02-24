@@ -73,7 +73,7 @@ def readCSV(f):
             result.append(line.strip().split(","))
     return result
 
-def generateInspectionsJson(inspections_dic,last_update): 
+def generateInspectionsJson(inspections_dic,last_update):
     inspections_template = {
         "date": last_update,
         "data": {
@@ -113,7 +113,7 @@ def generateInspectionsArray():
                         patients_summary.append(rs)
             else:
                 with urllib.request.urlopen(url) as response:
-                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","保健所の行政検査（PCR検査）（環境保健研究センター）", "保健所の行政検査（PCR検査）（保健所）", "保健所の行政検査（PCR検査）（民間検査機関）","保健所の行政検査（抗原検査）（保健所）","医療機関からの報告（検査実施人数）","医療機関からの報告（うちPCR検査）","医療機関からの報告（うち抗原検査）","医療機関からの報告（うち行政検査）","医療機関からの報告（うち行政検査以外の検査）","陽性確定の届出"])
+                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","行政機関（PCR検査）（環境保健研究センター）", "行政機関（PCR検査）（保健所）", "行政機関（PCR検査）（高齢者施設等従事者に対する一斉検査）","行政機関（PCR検査）（民間検査機関）","行政機関検査実施報告（抗原検査）（保健所）","行政機関検査実施報告（検査実施人数）","行政機関検査実施報告（うちPCR検査）","行政機関検査実施報告（うち抗原検査）","行政機関検査実施報告（うち行政検査）","行政機関検査実施報告（うち行政検査以外の検査）","陽性確定の届出"])
                     for i, row in enumerate(reader):
                         if i == 0:
                             if row["陽性確定の届出"] != "陽性確定の届出":
@@ -121,7 +121,7 @@ def generateInspectionsArray():
                             continue
                         date = datetime.datetime.strptime(row["検査日"], '%Y/%m/%d')
                         a_day_inspections_number = convertInt(
-                            row["保健所の行政検査（PCR検査）（環境保健研究センター）"]) + convertInt(row["医療機関からの報告（検査実施人数）"])
+                            row["行政機関（PCR検査）（環境保健研究センター）"]) + convertInt(row["行政機関（PCR検査）（高齢者施設等従事者に対する一斉検査）"]) + convertInt(row["行政機関検査実施報告（検査実施人数）"])
                         labels.append(row["検査日"])
                         inspections_number.append(a_day_inspections_number)
                         rs = {"日付": str(date), "小計": convertInt(row["陽性確定の届出"])}
@@ -246,7 +246,7 @@ def getUpdatedAt():
     return datetime.datetime.strptime(dom[0].text, "%Y年%m月%d日 %H時%M分").strftime("%Y/%m/%d %H:%M")
 
 def convertInt(digit):
-    if digit == "ー":
+    if digit == "ー" or digit == "":
         return 0
     return int(digit)
 
