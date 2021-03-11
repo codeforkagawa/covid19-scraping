@@ -95,7 +95,8 @@ def generateInspectionsArray():
     for i, url in enumerate(csv_files):
             if i == 0:
                 with urllib.request.urlopen(url) as response:
-                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","PCR検査実施件数（環境保健研究センター）","PCR検査実施件数（医療機関）","PCR検査実施結果（陽性）","PCR検査実施結果（陰性）","抗原検査実施件数（保健所）","抗原検査実施件数（医療機関）","抗原検査実施結果（陽性）","抗原検査実施結果（陰性）"])
+                    header = ["検査日","PCR検査実施件数（環境保健研究センター）","PCR検査実施件数（医療機関）","PCR検査実施結果（陽性）","PCR検査実施結果（陰性）","抗原検査実施件数（保健所）","抗原検査実施件数（医療機関）","抗原検査実施結果（陽性）","抗原検査実施結果（陰性）"]
+                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=header)
                     for i, row in enumerate(reader):
                         if i == 0:
                             if row["PCR検査実施結果（陽性）"] != "PCR検査実施結果（陽性）":
@@ -113,7 +114,8 @@ def generateInspectionsArray():
                         patients_summary.append(rs)
             else:
                 with urllib.request.urlopen(url) as response:
-                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=["検査日","行政機関（PCR検査）（環境保健研究センター）", "行政機関（PCR検査）（保健所）", "行政機関（PCR検査）（高齢者施設等従事者に対する一斉検査）","行政機関（PCR検査）（民間検査機関）","行政機関検査実施報告（抗原検査）（保健所）","行政機関検査実施報告（検査実施人数）","行政機関検査実施報告（うちPCR検査）","行政機関検査実施報告（うち抗原検査）","行政機関検査実施報告（うち行政検査）","行政機関検査実施報告（うち行政検査以外の検査）","陽性確定の届出"])
+                    header = ["検査日","行政機関（PCR検査）（環境保健研究センター）", "行政機関（PCR検査）（保健所）", "行政機関（PCR検査）（高齢者施設等従事者に対する一斉検査）","行政機関（PCR検査）（民間検査機関）","行政機関検査実施報告（抗原検査）（保健所）","行政機関検査実施報告（検査実施人数）","行政機関検査実施報告（うちPCR検査）","行政機関検査実施報告（うち抗原検査）","行政機関検査実施報告（うち行政検査）","行政機関検査実施報告（うち行政検査以外の検査）","自費検査のみ実施している医療機関、検査機関からの報告","陽性確定の届出"]
+                    reader = csv.DictReader(codecs.iterdecode(response, 'shift_jis'), delimiter=",", quotechar='"', fieldnames=header)
                     for i, row in enumerate(reader):
                         if i == 0:
                             if row["陽性確定の届出"] != "陽性確定の届出":
