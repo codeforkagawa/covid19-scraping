@@ -49,6 +49,8 @@ def generateContacts(updated_at):
         res, 'shift_jis'), delimiter=",", quotechar='"')
     prev_date = None
     for row in reader:
+        if row["相談日"] == '':
+            continue
         date = datetime.datetime.strptime(row["相談日"], "%Y/%m/%d")
         if prev_date is not None and (date - prev_date).days > 1:
             for i in range(1, (date - prev_date).days):
@@ -120,6 +122,8 @@ def generateInspectionsArray():
                         if i == 0:
                             if row["陽性確定の届出"] != "陽性確定の届出":
                                 raise Exception("column name is mismatch")
+                            continue
+                        if row["検査日"] == '':
                             continue
                         date = datetime.datetime.strptime(row["検査日"], '%Y/%m/%d')
                         a_day_inspections_number = convertInt(
